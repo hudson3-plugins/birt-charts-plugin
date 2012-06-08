@@ -10,7 +10,7 @@
 
     <groupId>org.hudsonci.plugins</groupId>
     <artifactId>birt-charts</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.1</version>
     <packaging>hpi</packaging>
 
     <name>Hudson BIRT Charts Plugin</name>
