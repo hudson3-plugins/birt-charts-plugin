@@ -1,0 +1,20 @@
+target
+work
+
+# IntelliJ project files 
+*.iml
+*.iws
+*.ipr
+.idea
+=======
+
+# MAC
+.DS_Store
+
+# eclipse project file
+.settings
+.classpath
+.project
+
+build
+
