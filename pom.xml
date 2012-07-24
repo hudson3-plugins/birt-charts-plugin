@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.eclipse.hudson.plugins</groupId>
         <artifactId>hudson-plugin-parent</artifactId>
-        <version>3.0.0-M2-1</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.hudsonci.plugins</groupId>
@@ -14,6 +14,41 @@
     <packaging>hpi</packaging>
 
     <name>Hudson BIRT Charts Plugin</name>
+    
+    <url>http://wiki.hudson-ci.org/display/HUDSON/BIRT+Chart+plugin</url>
+    <description>This Plugin provides graphing support to Hudson using BIRT Chart Engine.</description>
+    <licenses>
+        <license>
+            <name>The MIT license</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    
+    <scm>
+        <connection>scm:git:git://github.com/hudson3-plugins/birt-charts-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:hudson3-plugins/birt-charts-plugin.git</developerConnection>
+        <url>https://github.com/hudson3-plugins/birt-charts-plugin</url>
+    </scm>
+    
+    <properties>
+        <hudsonTags>misc</hudsonTags>
+    </properties>
+    
+    <developers>
+        <developer>
+            <id>wjprakash</id>
+            <name>Winston Prakash</name>
+            <roles>
+                <role>
+                    Maintainer
+                </role>
+            </roles>
+            <email>
+                winston.prakash@gmail.com
+            </email>
+        </developer>
+    </developers>
 
     <dependencies>
        

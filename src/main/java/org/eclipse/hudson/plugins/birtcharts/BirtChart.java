@@ -21,36 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package org.eclipse.hudson.plugins.birtcharts;
 
-import org.eclipse.hudson.graph.DataSet;
-import  org.eclipse.hudson.graph.GraphSeries;
 import java.awt.Color;
 import java.util.List;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
-import org.eclipse.birt.chart.model.attribute.AxisType;
-import org.eclipse.birt.chart.model.attribute.ColorDefinition;
-import org.eclipse.birt.chart.model.attribute.IntersectionType;
-import org.eclipse.birt.chart.model.attribute.LegendItemType;
-import org.eclipse.birt.chart.model.attribute.LineStyle;
-import org.eclipse.birt.chart.model.attribute.Marker;
-import org.eclipse.birt.chart.model.attribute.MarkerType;
-import org.eclipse.birt.chart.model.attribute.Position;
-import org.eclipse.birt.chart.model.attribute.RiserType;
-import org.eclipse.birt.chart.model.attribute.TickStyle;
+import org.eclipse.birt.chart.model.attribute.*;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
+import org.eclipse.birt.chart.model.attribute.impl.TooltipValueImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
 import org.eclipse.birt.chart.model.data.TextDataSet;
+import org.eclipse.birt.chart.model.data.Trigger;
+import org.eclipse.birt.chart.model.data.impl.ActionImpl;
 import org.eclipse.birt.chart.model.data.impl.NumberDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
+import org.eclipse.birt.chart.model.data.impl.TriggerImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.type.BarSeries;
@@ -58,9 +50,12 @@ import org.eclipse.birt.chart.model.type.LineSeries;
 import org.eclipse.birt.chart.model.type.impl.AreaSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.LineSeriesImpl;
+import org.eclipse.hudson.graph.DataSet;
+import org.eclipse.hudson.graph.GraphSeries;
 
 /**
- * Creates BIRT Bar Chart
+ * Creates a BIRT Chart
+ *
  * @author Winston Prakash
  */
 class BirtChart {
@@ -77,37 +72,31 @@ class BirtChart {
         dataSet = data;
     }
 
-     Chart createChart() {
+    Chart createChart() {
 
-        ChartWithAxes stackedAreaChart = ChartWithAxesImpl.create();
-        //stackedBarChart.setScript( "org.sample.birt.chart.ChartEventHandlerAdapter" );
-
-        stackedAreaChart.setType("Area Chart");
-        stackedAreaChart.setSubType("Stacked");
-
+        ChartWithAxes chartWithAxes = ChartWithAxesImpl.create();
 
         // Plot attributes
 
-        stackedAreaChart.getBlock().setBackground(ColorDefinitionImpl.CREAM().brighter());
-        stackedAreaChart.getBlock().getOutline().setVisible(true);
+        chartWithAxes.getBlock().setBackground(ColorDefinitionImpl.CREAM().brighter());
+        chartWithAxes.getBlock().getOutline().setVisible(true);
 
         // Title
 
-        stackedAreaChart.getTitle().getLabel().getCaption().setValue(chartTitle);
+        chartWithAxes.getTitle().getLabel().getCaption().setValue(chartTitle);
 
 
         // Legend
-        Legend lg = stackedAreaChart.getLegend();
+        Legend lg = chartWithAxes.getLegend();
         lg.setItemType(LegendItemType.SERIES_LITERAL);
         lg.getText().getFont().setSize(10);
         lg.getText().getFont().setBold(true);
         lg.getInsets().set(5, 0, 5, 5);
         lg.getClientArea().getInsets().set(5, 5, 5, 5);
-        //lg.getClientArea().setBackground(ColorDefinitionImpl.create(248, 193, 190).translucent());
 
 
         // X-Axis
-        Axis xAxis = stackedAreaChart.getPrimaryBaseAxes()[0];
+        Axis xAxis = chartWithAxes.getPrimaryBaseAxes()[0];
         xAxis.setType(AxisType.TEXT_LITERAL);
         xAxis.getMajorGrid().setTickStyle(TickStyle.BELOW_LITERAL);
         xAxis.getOrigin().setType(IntersectionType.MIN_LITERAL);
@@ -123,7 +112,7 @@ class BirtChart {
         setXData(xAxis);
 
         // Y-Axis
-        Axis yAxis = stackedAreaChart.getPrimaryOrthogonalAxis(xAxis);
+        Axis yAxis = chartWithAxes.getPrimaryOrthogonalAxis(xAxis);
         yAxis.getMajorGrid().setTickStyle(TickStyle.LEFT_LITERAL);
         yAxis.getTitle().getCaption().setValue(yAxisLabel);
         yAxis.getTitle().getCaption().setColor(ColorDefinitionImpl.BLUE().darker());
@@ -134,13 +123,11 @@ class BirtChart {
         yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.PINK().translucent(),
                 LineStyle.SOLID_LITERAL,
                 1));
-
-
         // Y-Series
 
         setYData(yAxis);
 
-        return stackedAreaChart;
+        return chartWithAxes;
     }
 
     protected void setXData(Axis xAxis) {
@@ -219,15 +206,15 @@ class BirtChart {
                 yAxis.getSeriesDefinitions().add(ySeriesDefinition);
                 ySeriesDefinition.getSeries().add(ySeries);
 
-//              Trigger tr1 = TriggerImpl.create(TriggerCondition.ONMOUSEOVER_LITERAL,
-//                                  ActionImpl.create(ActionType.SHOW_TOOLTIP_LITERAL,
-//                                  TooltipValueImpl.create(200, "value")));
+                Trigger tr1 = TriggerImpl.create(TriggerCondition.ONMOUSEOVER_LITERAL,
+                        ActionImpl.create(ActionType.SHOW_TOOLTIP_LITERAL,
+                        TooltipValueImpl.create(200, "value")));
 //              Trigger tr2 = TriggerImpl.create(TriggerCondition.ONCLICK_LITERAL,
 //                                  ActionImpl.create(ActionType.URL_REDIRECT_LITERAL, 
 //                                  URLValueImpl.create("https://www.google.com", null, "component",
 //                                  "value", "")));
 //
-//              ySeries.getTriggers().add(tr1);
+                ySeries.getTriggers().add(tr1);
 //              ySeries.getTriggers().add(tr2);
             }
 
