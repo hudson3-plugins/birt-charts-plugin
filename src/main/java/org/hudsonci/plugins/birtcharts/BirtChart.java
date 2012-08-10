@@ -1,7 +1,7 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2012, Oracle Corporation
+ * Copyright (cursor) 2012, Oracle Corporation
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.eclipse.hudson.plugins.birtcharts;
+package org.hudsonci.plugins.birtcharts;
 
 import java.awt.Color;
 import java.util.List;
@@ -29,15 +29,12 @@ import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.attribute.*;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
-import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.attribute.impl.TooltipValueImpl;
+import org.eclipse.birt.chart.model.attribute.impl.URLValueImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
-import org.eclipse.birt.chart.model.data.NumberDataSet;
-import org.eclipse.birt.chart.model.data.SeriesDefinition;
-import org.eclipse.birt.chart.model.data.TextDataSet;
-import org.eclipse.birt.chart.model.data.Trigger;
+import org.eclipse.birt.chart.model.data.*;
 import org.eclipse.birt.chart.model.data.impl.ActionImpl;
 import org.eclipse.birt.chart.model.data.impl.NumberDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
@@ -45,6 +42,7 @@ import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.TriggerImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.layout.Legend;
+import org.eclipse.birt.chart.model.type.AreaSeries;
 import org.eclipse.birt.chart.model.type.BarSeries;
 import org.eclipse.birt.chart.model.type.LineSeries;
 import org.eclipse.birt.chart.model.type.impl.AreaSeriesImpl;
@@ -79,7 +77,7 @@ class BirtChart {
         // Plot attributes
 
         chartWithAxes.getBlock().setBackground(ColorDefinitionImpl.CREAM().brighter());
-        chartWithAxes.getBlock().getOutline().setVisible(true);
+        chartWithAxes.getBlock().getOutline().setVisible(false);
 
         // Title
 
@@ -105,9 +103,9 @@ class BirtChart {
         xAxis.getLabel().getCaption().getFont().setItalic(true);
         xAxis.getLabel().getCaption().setColor(ColorDefinitionImpl.BLUE().darker());
         xAxis.getLineAttributes().setColor(ColorDefinitionImpl.BLUE().darker());
-        xAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.PINK().translucent(),
-                LineStyle.SOLID_LITERAL,
-                1));
+//        xAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.PINK().translucent(),
+//                LineStyle.SOLID_LITERAL,
+//                1));
 
         setXData(xAxis);
 
@@ -120,9 +118,9 @@ class BirtChart {
         yAxis.getLabel().getCaption().setColor(ColorDefinitionImpl.BLUE().darker());
         yAxis.getLineAttributes().setColor(ColorDefinitionImpl.BLUE().darker());
         yAxis.getTitle().setVisible(true);
-        yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.PINK().translucent(),
-                LineStyle.SOLID_LITERAL,
-                1));
+//        yAxis.getMajorGrid().setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl.PINK().translucent(),
+//                LineStyle.SOLID_LITERAL,
+//                1));
         // Y-Series
 
         setYData(yAxis);
@@ -172,14 +170,19 @@ class BirtChart {
                     case GraphSeries.TYPE_AREA:
                         ySeries = AreaSeriesImpl.create();
                         ySeries.setTranslucent(true);
+                        AreaSeries areaSeries = (AreaSeries) ySeries;
+                        for (int i = 0; i < areaSeries.getMarkers().size(); i++) {
+                            ((Marker) areaSeries.getMarkers().get(i)).setType(MarkerType.CIRCLE_LITERAL);
+                            ((Marker) areaSeries.getMarkers().get(i)).setSize(4);
+                        }
                         break;
                     case GraphSeries.TYPE_LINE:
                         ySeries = LineSeriesImpl.create();
-                        LineSeries ls = (LineSeries) ySeries;
-                        ls.getLineAttributes().setColor(getColor(grpahYSeries.getColor()));
-                        for (int i = 0; i < ls.getMarkers().size(); i++) {
-                            ((Marker) ls.getMarkers().get(i)).setType(MarkerType.CIRCLE_LITERAL);
-                            ((Marker) ls.getMarkers().get(i)).setSize(2);
+                        LineSeries lineSeries = (LineSeries) ySeries;
+                        lineSeries.getLineAttributes().setColor(getColor(grpahYSeries.getColor()));
+                        for (int i = 0; i < lineSeries.getMarkers().size(); i++) {
+                            ((Marker) lineSeries.getMarkers().get(i)).setType(MarkerType.CIRCLE_LITERAL);
+                            ((Marker) lineSeries.getMarkers().get(i)).setSize(2);
                         }
                 }
 
@@ -205,17 +208,22 @@ class BirtChart {
                 ySeriesDefinition.getSeriesPalette().update(getColor(grpahYSeries.getColor()));
                 yAxis.getSeriesDefinitions().add(ySeriesDefinition);
                 ySeriesDefinition.getSeries().add(ySeries);
-
-                Trigger tr1 = TriggerImpl.create(TriggerCondition.ONMOUSEOVER_LITERAL,
-                        ActionImpl.create(ActionType.SHOW_TOOLTIP_LITERAL,
-                        TooltipValueImpl.create(200, "value")));
-//              Trigger tr2 = TriggerImpl.create(TriggerCondition.ONCLICK_LITERAL,
-//                                  ActionImpl.create(ActionType.URL_REDIRECT_LITERAL, 
-//                                  URLValueImpl.create("https://www.google.com", null, "component",
-//                                  "value", "")));
-//
-                ySeries.getTriggers().add(tr1);
-//              ySeries.getTriggers().add(tr2);
+                
+                // Trigger values are by CustomActionRenderer
+                ActionValue tooltipValue = TooltipValueImpl.create(100, ""); 
+		Action tooltipAction = ActionImpl.create(ActionType.SHOW_TOOLTIP_LITERAL, tooltipValue);
+		Trigger mouseOverTrigger = TriggerImpl.create(TriggerCondition.ONMOUSEOVER_LITERAL, tooltipAction);   
+		ySeries.getTriggers().add(mouseOverTrigger); 
+                
+                ActionValue urlRedirectValue = URLValueImpl.create(grpahYSeries.getBaseURL(), null, null, null, null); 
+		Action urlRedirectAction = ActionImpl.create(ActionType.URL_REDIRECT_LITERAL, urlRedirectValue);
+		Trigger mouseClickTrigger = TriggerImpl.create(TriggerCondition.ONCLICK_LITERAL, urlRedirectAction);   
+                
+		ySeries.getTriggers().add(mouseClickTrigger); 
+                
+		Cursor cursor = AttributeFactory.eINSTANCE.createCursor();
+		cursor.setType( CursorType.POINTER );
+		ySeries.setCursor(cursor);
             }
 
         }

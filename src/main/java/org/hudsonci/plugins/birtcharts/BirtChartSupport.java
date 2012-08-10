@@ -1,19 +1,20 @@
-/*******************************************************************************
+/**
+ * *****************************************************************************
  *
  * Copyright (c) 2011 Oracle Corporation.
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * Contributors: 
+ * Contributors:
  *
- *  Winston Prakash
+ * Winston Prakash
  *
- *******************************************************************************/
-
-package org.eclipse.hudson.plugins.birtcharts;
+ ******************************************************************************
+ */
+package org.hudsonci.plugins.birtcharts;
 
 import hudson.Extension;
 import java.awt.Graphics2D;
@@ -35,13 +36,17 @@ import org.eclipse.hudson.graph.DataSet;
 import org.eclipse.hudson.graph.GraphSupport;
 import org.eclipse.hudson.graph.GraphSupportDescriptor;
 import org.eclipse.hudson.graph.MultiStageTimeSeries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BIRT Chart implementation for Hudson Graph Support
+ *
  * @author Winston Prakash
  */
 public class BirtChartSupport extends GraphSupport {
 
+    private transient Logger logger = LoggerFactory.getLogger(BirtChartSupport.class);
     private String chartTitle;
     private String xAxisLabel;
     private String yAxisLabel;
@@ -74,27 +79,22 @@ public class BirtChartSupport extends GraphSupport {
 
     @Override
     public BufferedImage render(int width, int height) {
-        Chart cm = createBirtChart();
+         
         // obtain a png image device renderer
-        ChartEngine ce = null;
-        try {
-            PlatformConfig config = new PlatformConfig();
-            config.setProperty("STANDALONE", "true");
-            ce = ChartEngine.instance(config);
-            dRenderer = ce.getRenderer("dv.PNG");
-        } catch (ChartException ex) {
-            ex.printStackTrace();
-        }
-
         BufferedImage image = new BufferedImage(width,
                 height,
                 BufferedImage.TYPE_INT_RGB);
-        //Draw the chart in the buffered image
-        Graphics2D g2d = (Graphics2D) image.getGraphics();
-        dRenderer.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, g2d);
-        dRenderer.setProperty(IDeviceRenderer.CACHED_IMAGE, image);
-
         try {
+            PlatformConfig config = new PlatformConfig();
+            config.setProperty("STANDALONE", "true");
+            ChartEngine ce = ChartEngine.instance(config);
+            dRenderer = ce.getRenderer("dv.PNG");
+
+
+            //Draw the chart in the buffered image
+            Graphics2D g2d = (Graphics2D) image.getGraphics();
+            dRenderer.setProperty(IDeviceRenderer.GRAPHICS_CONTEXT, g2d);
+            dRenderer.setProperty(IDeviceRenderer.CACHED_IMAGE, image);
 
             Bounds bo = BoundsImpl.create(0, 0, width, height);
             // convert pixels to points (1 inch = 72 points = dpi pixels )
@@ -103,6 +103,7 @@ public class BirtChartSupport extends GraphSupport {
             IGenerator gr = ce.getGenerator();
 
             IDisplayServer dServer = dRenderer.getDisplayServer();
+            Chart cm = createBirtChart();
             GeneratedChartState gcs =
                     gr.build(dServer,
                     cm,
@@ -110,21 +111,22 @@ public class BirtChartSupport extends GraphSupport {
                     null,
                     null,
                     null);
+            gcs.getRunTimeContext().setActionRenderer(new CustomActionRenderer());
             dRenderer.setProperty(IDeviceRenderer.UPDATE_NOTIFIER,
                     new EmptyUpdateNotifier(cm, gcs.getChartModel()));
             gr.render(dRenderer, gcs); // Style processor
 
         } catch (ChartException ex) {
-            ex.printStackTrace();
+            logger.error("BIRT Chart Engine failed.", ex);
         }
 
         return image;
     }
 
     private Chart createBirtChart() {
-        
+
         return new BirtChart(chartTitle, xAxisLabel, yAxisLabel, dataSet).createChart();
-        
+
     }
 
     @Override
