@@ -24,6 +24,8 @@
  */
 package org.hudsonci.plugins.birtcharts;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.event.StructureSource;
 import org.eclipse.birt.chart.event.StructureType;
@@ -34,6 +36,8 @@ import org.eclipse.birt.chart.model.attribute.TooltipValue;
 import org.eclipse.birt.chart.model.attribute.URLValue;
 import org.eclipse.birt.chart.model.data.Action;
 import org.eclipse.birt.chart.render.ActionRendererAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Custom Action Renderer (Tooltip & URL redirect) while creating ImageMap for a
@@ -42,6 +46,8 @@ import org.eclipse.birt.chart.render.ActionRendererAdapter;
  * @author Winston Prakash
  */
 public class CustomActionRenderer extends ActionRendererAdapter {
+    
+    private transient Logger logger = LoggerFactory.getLogger(CustomActionRenderer.class);
 
     @Override
     public void processAction(Action action, StructureSource source) {
@@ -51,13 +57,20 @@ public class CustomActionRenderer extends ActionRendererAdapter {
             if (StructureType.SERIES_DATA_POINT.equals(source.getType())) {
                 if ((tv.getText() == null) || ("".equals(tv.getText()))) {
                     final DataPointHints dph = (DataPointHints) source.getSource();
-                    int value = Integer.parseInt(dph.getDisplayValue().trim());
-                    if (value > 0) {
-                        String MyToolTip = dph.getBaseDisplayValue() + ": " + dph.getDisplayValue();
-                        tv.setText(MyToolTip);
-                    } else {
-                        tv.setText("");
+                    NumberFormat nf = NumberFormat.getInstance();
+                    Number value;
+                    try {
+                        value = nf.parse(dph.getDisplayValue().trim());
+                        if (value.floatValue() > 0) {
+                            String MyToolTip = dph.getBaseDisplayValue() + ": " + dph.getDisplayValue();
+                            tv.setText(MyToolTip);
+                        } else {
+                            tv.setText("");
+                        }
+                    } catch (ParseException exc) {
+                        logger.debug("Tooltip Number parsing error", exc);
                     }
+
                 }
             }
         }
